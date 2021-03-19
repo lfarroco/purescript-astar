@@ -1,6 +1,8 @@
 # purescript-astar
 
-A* implementation on PureScript.
+[![CI](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml/badge.svg)](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml)
+
+An implementation of the A* pathing algorithm on PureScript.
 
 Based on the work of 
 - https://www.redblobgames.com/pathfinding/a-star/introduction.html
