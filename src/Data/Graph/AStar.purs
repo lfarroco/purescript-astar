@@ -24,33 +24,21 @@ derive instance eqPoint :: Eq Point
 
 derive instance ordPoint :: Ord Point
 
-data Cell
-  = Grass
-  | Rock
-  | Wall
-
 derive instance eqCell :: Eq Cell
 
-data PathCell
+data Cell
   = Walk
   | Empty
-  | Start
   | Blocked
+  | Start
   | Goal
 
-derive instance eqPathCell :: Eq PathCell
-
-instance showPathCell :: Show PathCell where
+instance showCell :: Show Cell where
   show Walk = "x "
   show Empty = "  "
-  show Start = "S "
+  show Start = "✯ "
   show Blocked = "█ "
   show Goal = "✯ "
-
-instance showCell :: Show Cell where
-  show Grass = " ^ "
-  show Rock = " O "
-  show Wall = "█ "
 
 type Grid
   = Map Point Cell
@@ -60,9 +48,9 @@ getNeighbors (Point x y) matrix =
   let
     getCell (Point dx dy) = case Matrix.get (dx + x) (dy + y) matrix of
       Just cell ->
-        if cell == Rock || cell == Wall then
+        if cell == Blocked then
           Nothing
-        else
+        else 
           Just $ Point (dx + x) (dy + y)
       Nothing -> Nothing
 
@@ -112,13 +100,13 @@ findPath openSet costMap cameFrom target world =
 
                         nextIsNew = nextCost == Nothing
 
-                        foundABetterPath = Just moveToNextCost < nextCost
+                        pathToNextIsBetter = Just moveToNextCost < nextCost
 
                         heuristic = distance next target
 
                         totalCost = moveToNextCost + heuristic
                       in
-                        if nextIsNew || foundABetterPath then
+                        if nextIsNew || pathToNextIsBetter then
                           { openSet: Map.insert next totalCost acc.openSet
                           , costMap: Map.insert next moveToNextCost acc.costMap
                           , cameFrom: Map.insert next current acc.cameFrom

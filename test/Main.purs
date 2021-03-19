@@ -4,7 +4,7 @@ import Prelude
 import Effect (Effect)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
-import Data.Graph.AStar (Cell(..), PathCell(..), Point(..), runAStar)
+import Data.Graph.AStar (Cell(..), Point(..), runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Matrix (Matrix)
 import Matrix as Matrix
@@ -50,12 +50,13 @@ testWorld =
                 map
                   ( \c ->
                       if c == 0 then
-                        Grass
+                        Empty
                       else
-                        Wall
+                        Blocked
                   )
                   n
             )
+
 
     mat = fromMaybe Matrix.empty $ Matrix.fromArray arr
 
@@ -65,34 +66,21 @@ testWorld =
   in
     mat
 
-showPath :: Point -> Point -> Array Point -> Matrix Cell -> Matrix PathCell
+showPath :: Point -> Point -> Array Point -> Matrix Cell -> Matrix Cell
 showPath start goal path world =
-  let
-    mtx = Matrix.repeat (Matrix.width world) (Matrix.height world) Empty
-  in
     path
       # foldl
           ( \xs (Point x y) -> case Matrix.set x y Walk xs of
               Just m -> m
               _ -> xs
           )
-          mtx
+          world
       # Matrix.indexedMap
           ( \x y val ->
-              let
-                cellType = fromMaybe Grass $ Matrix.get x y world
-
-                next = case cellType of
-                  Grass -> Empty
-                  Rock -> Blocked
-                  Wall -> Blocked
-              in
                 if Point x y == start then
                   Start
                 else if Point x y == goal then
                   Goal
-                else if val == Walk then
+                else 
                   val
-                else
-                  next
           )
