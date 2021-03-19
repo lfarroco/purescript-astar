@@ -4,7 +4,7 @@ import Prelude
 import Effect (Effect)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
-import Data.Pathfinding.AStar (Cell(..), PathCell(..), Point(..), runAStar)
+import Data.Graph.AStar (Cell(..), PathCell(..), Point(..), runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Matrix (Matrix)
 import Matrix as Matrix
@@ -34,32 +34,36 @@ printTest =
 testWorld :: Matrix Cell
 testWorld =
   let
-    mat = Matrix.repeat 10 10 (Grass)
+    arr =
+      [ [ 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0 ]
+      , [ 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0 ]
+      , [ 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0 ]
+      , [ 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0 ]
+      , [ 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0 ]
+      , [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0 ]
+      , [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0 ]
+      , [ 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0 ]
+      , [ 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0 ]
+      ]
+        # map
+            ( \n ->
+                map
+                  ( \c ->
+                      if c == 0 then
+                        Grass
+                      else
+                        Wall
+                  )
+                  n
+            )
+
+    mat = fromMaybe Matrix.empty $ Matrix.fromArray arr
 
     setCell x y v matrix = case Matrix.set x y v matrix of
       Just m -> m
       _ -> matrix
   in
     mat
-      # setCell 2 0 Wall
-      # setCell 2 1 Wall
-      # setCell 2 2 Wall
-      # setCell 2 3 Wall
-      # setCell 4 2 Wall
-      # setCell 4 3 Wall
-      # setCell 4 4 Wall
-      # setCell 4 5 Wall
-      # setCell 4 6 Wall
-      # setCell 4 7 Wall
-      # setCell 4 8 Wall
-      # setCell 4 9 Wall
-      # setCell 6 0 Wall
-      # setCell 6 1 Wall
-      # setCell 6 2 Wall
-      # setCell 6 3 Wall
-      # setCell 6 4 Wall
-      # setCell 6 5 Wall
-      # setCell 6 6 Wall
 
 showPath :: Point -> Point -> Array Point -> Matrix Cell -> Matrix PathCell
 showPath start goal path world =

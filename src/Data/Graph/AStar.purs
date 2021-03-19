@@ -1,6 +1,7 @@
-module Data.Pathfinding.AStar where
+module Data.Graph.AStar where
 
 import Prelude
+
 import Control.Apply (lift2)
 import Data.Array (filter, foldl, head, mapMaybe, sortWith)
 import Data.Int (toNumber)
@@ -8,7 +9,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
-import Math (abs)
+import Math (abs, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
 
@@ -103,7 +104,7 @@ findPath openSet costMap cameFrom target world =
 
                         moveToNextCost =
                           if isDiagonal then
-                            cost + 1.4
+                            cost + sqrt2
                           else
                             cost + 1.0
 
@@ -134,7 +135,7 @@ findPath openSet costMap cameFrom target world =
 
 traceParent :: Point -> Map Point Point -> Array Point
 traceParent point index = case Map.lookup point index of
-  Just prev -> (traceParent prev index) <> [ prev ]
+  Just prev -> traceParent prev index <> [ prev ]
   Nothing -> []
 
 distance :: Point -> Point -> Number
