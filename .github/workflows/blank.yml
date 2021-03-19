@@ -26,6 +26,9 @@ jobs:
         with:
           node-version: '12.x'
 
+      - name: Install purescript
+        run: npm install -g purescript
+
       - name: Install spago
         run: npm install -g spago
       
