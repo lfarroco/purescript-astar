@@ -18,27 +18,8 @@ import Data.Set (Set)
 type Point
   = Tuple Int Int
 
-data Cell
-  = Walk
-  | Empty
-  | Blocked
-  | Start
-  | Goal
-
-derive instance eqCell :: Eq Cell
-
-instance showCell :: Show Cell where
-  show Walk = "x "
-  show Empty = "  "
-  show Start = "✯ "
-  show Blocked = "w "
-  show Goal = "✯ "
-
-type Grid
-  = Map Point Cell
-
-getNeighbors :: Point -> Set Point -> Matrix Cell -> Array Point
-getNeighbors (Tuple x y) closedSet matrix =
+--getNeighbors :: forall a. Set a -> Point -> Set Point -> Matrix a -> Array Point
+getNeighbors blocked (Tuple x y) closedSet matrix =
   let
     getCell (Tuple x' y') =
       let
@@ -50,7 +31,7 @@ getNeighbors (Tuple x y) closedSet matrix =
       in
         case Matrix.get x'' y'' matrix of
           Just cell ->
-            if cell == Blocked || Set.member point closedSet then
+            if Set.member cell blocked || Set.member point closedSet then
               Nothing
             else
               Just point
@@ -72,8 +53,8 @@ type State
 
 -- Making it more general: can receive an array of walkable tiles, and another of non walkable,
 -- with the same type as the matrix
-step :: State -> Matrix Cell -> Array Point
-step { openSet, closedSet, knownCosts, cameFrom, target } world =
+step :: forall a. Ord a => Set a -> State -> Matrix a -> Array Point
+step blocked { openSet, closedSet, knownCosts, cameFrom, target } world =
   let
     maybeHead =
       openSet
@@ -91,7 +72,7 @@ step { openSet, closedSet, knownCosts, cameFrom, target } world =
           closed_ = closedSet # Set.insert current
 
           state =
-            getNeighbors current closed_ world
+            getNeighbors blocked current closed_ world
               # foldl
                   ( \acc next ->
                       let
@@ -130,7 +111,7 @@ step { openSet, closedSet, knownCosts, cameFrom, target } world =
           if current == target then
             traceParent target state.cameFrom <> [ target ]
           else
-            step state world
+            step blocked state world
 
 traceParent :: Point -> Map Point Point -> Array Point
 traceParent point index = case Map.lookup point index of
@@ -144,8 +125,8 @@ distance p1 p2 =
   in
     p2 - p1 # mag # toNumber # abs
 
-runAStar :: Point -> Point -> Matrix Cell -> Array Point
-runAStar start target grid =
+runAStar :: forall a. Ord a => Set a -> Point -> Point -> Matrix a -> Array Point
+runAStar blocked start target grid =
   let
     openSet = Map.empty # Map.insert start 0.0
 
@@ -155,4 +136,4 @@ runAStar start target grid =
 
     closedSet = Set.empty
   in
-    step { openSet, closedSet, knownCosts, cameFrom, target } grid
+    step blocked { openSet, closedSet, knownCosts, cameFrom, target } grid

@@ -5,11 +5,29 @@ import Effect (Effect)
 import Test.Assert (assertEqual)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
-import Data.Graph.AStar (Point, Cell(..),runAStar)
+import Data.Set as Set
+import Data.Graph.AStar (Point, runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple
 import Matrix (Matrix)
 import Matrix as Matrix
+
+data Cell
+  = Walk
+  | Empty
+  | Blocked
+  | Start
+  | Goal
+
+derive instance eqCell :: Eq Cell
+derive instance ordCell :: Ord Cell
+
+instance showCell :: Show Cell where
+  show Walk = "x "
+  show Empty = "  "
+  show Start = "✯ "
+  show Blocked = "w "
+  show Goal = "✯ "
 
 main :: Effect Unit
 main =
@@ -39,7 +57,9 @@ runTest =
 
     goal = Tuple 4 4
 
-    path = runAStar start goal testWorld
+    blocked = Set.empty # Set.insert Blocked
+
+    path = runAStar blocked start goal testWorld
   in
     { matrix: showPath start goal path testWorld
     , path: path
