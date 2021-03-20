@@ -1,21 +1,20 @@
 module Test.Main where
 
+import Data.Graph.AStar (runAStar, Vector2d, vector2d)
 import Prelude (class Eq, class Ord, class Show, Unit, discard, map, show, (#), ($), (==))
 import Effect (Effect)
 import Test.Assert (assertEqual)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
 import Data.Set as Set
-import Data.Graph.AStar (runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Tuple
 import Matrix (Matrix)
 import Matrix as Matrix
 
 data Cell
   = Walk
-  | Empty
   | Blocked
+  | Empty
   | Start
   | Goal
 
@@ -24,11 +23,12 @@ derive instance eqCell :: Eq Cell
 derive instance ordCell :: Ord Cell
 
 instance showCell :: Show Cell where
-  show Walk = "x "
-  show Empty = "  "
+  show Walk = "= "
+  show Empty = " "
   show Start = "✯ "
-  show Blocked = "w "
-  show Goal = "✯ "
+  show Blocked = "# "
+  show Goal = "⚑ "
+
 
 main :: Effect Unit
 main =
@@ -36,28 +36,28 @@ main =
     diagonalMovement = runTest true
 
     diagonalExpected =
-      [ Tuple 0 0
-      , Tuple 0 1
-      , Tuple 0 2
-      , Tuple 0 3
-      , Tuple 1 4
-      , Tuple 2 4
-      , Tuple 3 4
-      , Tuple 4 4
+      [ vector2d 0 0
+      , vector2d 0 1
+      , vector2d 0 2
+      , vector2d 0 3
+      , vector2d 1 4
+      , vector2d 2 4
+      , vector2d 3 4
+      , vector2d 4 4
       ]
 
     nonDiagonalMovement = runTest false
 
     nonDiagonalExpected =
-      [ (Tuple 0 0)
-      , (Tuple 0 1)
-      , (Tuple 0 2)
-      , (Tuple 0 3)
-      , (Tuple 0 4)
-      , (Tuple 1 4)
-      , (Tuple 2 4)
-      , (Tuple 3 4)
-      , (Tuple 4 4)
+      [ (vector2d 0 0)
+      , (vector2d 0 1)
+      , (vector2d 0 2)
+      , (vector2d 0 3)
+      , (vector2d 0 4)
+      , (vector2d 1 4)
+      , (vector2d 2 4)
+      , (vector2d 3 4)
+      , (vector2d 4 4)
       ]
   in
     do
@@ -70,12 +70,12 @@ main =
       log $ show nonDiagonalMovement.path
       assertEqual { expected: nonDiagonalExpected, actual: nonDiagonalMovement.path }
 
-runTest :: Boolean -> { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
+runTest :: Boolean -> { matrix :: Matrix Cell, path :: Array Vector2d }
 runTest useDiagonal =
   let
-    start = Tuple 0 0
+    start = {x: 0, y: 0}
 
-    goal = Tuple 4 4
+    goal = {x: 4 , y: 4}
 
     blocked = Set.empty # Set.insert Blocked
 
@@ -106,24 +106,24 @@ testWorld =
         )
 
 showPath ::
-  Tuple Int Int ->
-  Tuple Int Int ->
-  Array (Tuple Int Int) ->
+  Vector2d ->
+  Vector2d ->
+  Array (Vector2d) ->
   Array (Array Cell) ->
   Matrix Cell
 showPath start goal path world =
   path
     # foldl
-        ( \xs (Tuple x y) -> case Matrix.set x y Walk xs of
+        ( \xs { x, y} -> case Matrix.set x y Walk xs of
             Just m -> m
             _ -> xs
         )
         (Matrix.fromArray world # fromMaybe Matrix.empty)
     # Matrix.indexedMap
         ( \x y val ->
-            if Tuple x y == start then
+          if { x ,y }== start then
               Start
-            else if Tuple x y == goal then
+            else if { x, y} == goal then
               Goal
             else
               val
