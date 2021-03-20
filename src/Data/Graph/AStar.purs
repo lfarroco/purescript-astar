@@ -40,17 +40,25 @@ type Grid
 getNeighbors :: Point -> Set Point -> Matrix Cell -> Array Point
 getNeighbors (Tuple x y) closedSet matrix =
   let
-    getCell point = case Matrix.get (x + fst point) (y + snd point) matrix of
-      Just cell ->
-        if cell == Blocked || ( Set.member ( Tuple (x + fst point) (y + snd point) ) closedSet) then
-          Nothing
-        else
-          Just $ Tuple (x + fst point) (y + snd point)
-      Nothing -> Nothing
+    getCell (Tuple x' y') =
+      let
+        x'' = x + x'
+
+        y'' = y + y'
+
+        point = Tuple x'' y''
+      in
+        case Matrix.get x'' y'' matrix of
+          Just cell ->
+            if cell == Blocked || Set.member point closedSet then
+              Nothing
+            else
+              Just point
+          Nothing -> Nothing
 
     ns = [ -1, 0, 1 ]
 
-    directions = lift2 Tuple ns ns # filter (\p -> p /= Tuple 0 0)
+    directions = lift2 Tuple ns ns
   in
     mapMaybe getCell directions
 
@@ -79,7 +87,8 @@ step { openSet, closedSet, knownCosts, cameFrom, target } world =
       Just current ->
         let
           openSet_ = openSet # Map.update (\_ -> Nothing) current
-          closed_  = closedSet # Set.insert current
+
+          closed_ = closedSet # Set.insert current
 
           state =
             getNeighbors current closed_ world
