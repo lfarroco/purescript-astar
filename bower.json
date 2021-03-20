@@ -1,0 +1,22 @@
+{
+    "name": "purescript-purescript-astar",
+    "license": [
+        "MIT"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/lfarroco/purescript-astar.git"
+    },
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "output"
+    ],
+    "dependencies": {
+        "purescript-assert": "^v5.0.0",
+        "purescript-matrices": "^v5.0.1",
+        "purescript-ordered-collections": "^v2.0.0",
+        "purescript-psci-support": "^v5.0.0"
+    }
+}
