@@ -64,18 +64,18 @@ main =
       log $ "-----Diagonal Movement-----"
       log $ show diagonalMovement.matrix
       log $ show diagonalMovement.path
-      --assertEqual { expected: diagonalExpected, actual: diagonalMovement.path }
+      assertEqual { expected: diagonalExpected, actual: diagonalMovement.path }
       log $ "-----Non-Diagonal Movement-----"
       log $ show nonDiagonalMovement.matrix
       log $ show nonDiagonalMovement.path
+      assertEqual { expected: nonDiagonalExpected, actual: nonDiagonalMovement.path }
 
---assertEqual { expected: nonDiagonalExpected, actual: nonDiagonalMovement.path }
 runTest :: Boolean -> { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
 runTest diagonal =
   let
     start = Tuple 0 0
 
-    goal = Tuple 3 3
+    goal = Tuple 4 4
 
     blocked = Set.empty # Set.insert Blocked
 
@@ -87,10 +87,11 @@ runTest diagonal =
 
 testWorld :: Array (Array Cell)
 testWorld =
-  [ [ 0, 0, 1, 0 ]
-  , [ 0, 0, 0, 0 ]
-  , [ 1, 1, 1, 0 ]
-  , [ 0, 1, 0, 0 ]
+  [ [ 0, 0, 0, 0, 0 ]
+  , [ 0, 0, 0, 1, 0 ]
+  , [ 0, 0, 0, 1, 0 ]
+  , [ 0, 1, 1, 1, 0 ]
+  , [ 0, 0, 0, 0, 0 ]
   ]
     # map
         ( \n ->
