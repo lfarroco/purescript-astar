@@ -1,4 +1,4 @@
-module Data.Graph.AStar where
+module Data.Graph.AStar (runAStar) where 
 
 import Prelude
 import Control.Apply (lift2)
@@ -14,12 +14,28 @@ import Matrix as Matrix
 import Data.Set as Set
 import Data.Set (Set)
 
--- can be extended to "Point x y weight"
+runAStar :: forall a. Ord a => Set a -> Boolean -> Point -> Point -> Array (Array a) -> Array Point
+runAStar blocked diagonal start target grid =
+  let
+    openSet = Map.empty # Map.insert start 0.0
+
+    knownCosts = Map.empty # Map.insert start 0.0
+
+    cameFrom = Map.empty
+
+    closedSet = Set.empty
+
+    world = Matrix.fromArray grid # fromMaybe Matrix.empty
+  in
+    step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world
+
 type Point
   = Tuple Int Int
 
---getNeighbors :: forall a. Set a -> Point -> Set Point -> Matrix a -> Array Point
-getNeighbors blocked (Tuple x y) closedSet matrix =
+sumTuple (Tuple x y) = x + y # toNumber # abs
+
+getNeighbors :: forall a. Ord a => Set a -> Boolean -> Point -> Set Point -> Matrix a -> Array Point
+getNeighbors blocked diagonal (Tuple x y) closedSet matrix =
   let
     getCell (Tuple x' y') =
       let
@@ -37,9 +53,9 @@ getNeighbors blocked (Tuple x y) closedSet matrix =
               Just point
           Nothing -> Nothing
 
-    ns = [ -1, 0, 1 ]
+    ns = [-1,0,1]
 
-    directions = lift2 Tuple ns ns
+    directions = lift2 Tuple ns ns # filter \p -> sumTuple p <= (if diagonal then 2.0 else 1.0 )
   in
     mapMaybe getCell directions
 
@@ -51,10 +67,8 @@ type State
     , target :: Point
     }
 
--- Making it more general: can receive an array of walkable tiles, and another of non walkable,
--- with the same type as the matrix
-step :: forall a. Ord a => Set a -> State -> Matrix a -> Array Point
-step blocked { openSet, closedSet, knownCosts, cameFrom, target } world =
+step :: forall a. Ord a => Set a -> Boolean -> State -> Matrix a -> Array Point
+step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world =
   let
     maybeHead =
       openSet
@@ -72,16 +86,14 @@ step blocked { openSet, closedSet, knownCosts, cameFrom, target } world =
           closed_ = closedSet # Set.insert current
 
           state =
-            getNeighbors blocked current closed_ world
+            getNeighbors blocked diagonal current closed_ world
               # foldl
                   ( \acc next ->
                       let
                         cost = Map.lookup current acc.knownCosts # fromMaybe 0.0
 
-                        isDiagonal = distance current next == 2.0
-
                         moveToNextCost =
-                          if isDiagonal then
+                          if diagonal && distance current next == 2.0 then
                             cost + sqrt2
                           else
                             cost + 1.0
@@ -111,7 +123,7 @@ step blocked { openSet, closedSet, knownCosts, cameFrom, target } world =
           if current == target then
             traceParent target state.cameFrom <> [ target ]
           else
-            step blocked state world
+            step blocked diagonal state world
 
 traceParent :: Point -> Map Point Point -> Array Point
 traceParent point index = case Map.lookup point index of
@@ -119,23 +131,4 @@ traceParent point index = case Map.lookup point index of
   Nothing -> []
 
 distance :: Point -> Point -> Number
-distance p1 p2 =
-  let
-    mag (Tuple x y) = x + y
-  in
-    p2 - p1 # mag # toNumber # abs
-
-runAStar :: forall a. Ord a => Set a -> Point -> Point -> Array (Array a) -> Array Point
-runAStar blocked start target grid =
-  let
-    openSet = Map.empty # Map.insert start 0.0
-
-    knownCosts = Map.empty # Map.insert start 0.0
-
-    cameFrom = Map.empty
-
-    closedSet = Set.empty
-
-    world = Matrix.fromArray grid # fromMaybe Matrix.empty
-  in
-    step blocked { openSet, closedSet, knownCosts, cameFrom, target } world
+distance p1 p2 = p2 - p1 # sumTuple

@@ -33,9 +33,9 @@ instance showCell :: Show Cell where
 main :: Effect Unit
 main =
   let
-    result = runTest
+    diagonalMovement = runTest true
 
-    expected =
+    diagonalExpected =
       [ Tuple 0 0
       , Tuple 0 1
       , Tuple 0 2
@@ -45,22 +45,41 @@ main =
       , Tuple 3 4
       , Tuple 4 4
       ]
+
+    nonDiagonalMovement = runTest false
+
+    nonDiagonalExpected =
+      [ (Tuple 0 0)
+      , (Tuple 0 1)
+      , (Tuple 0 2)
+      , (Tuple 0 3)
+      , (Tuple 0 4)
+      , (Tuple 1 4)
+      , (Tuple 2 4)
+      , (Tuple 3 4)
+      , (Tuple 4 4)
+      ]
   in
     do
-      log $ show result.matrix
-      log $ show result.path
-      assertEqual { expected, actual: result.path }
+      log $ "-----Diagonal Movement-----"
+      log $ show diagonalMovement.matrix
+      log $ show diagonalMovement.path
+      --assertEqual { expected: diagonalExpected, actual: diagonalMovement.path }
+      log $ "-----Non-Diagonal Movement-----"
+      log $ show nonDiagonalMovement.matrix
+      log $ show nonDiagonalMovement.path
 
-runTest :: { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
-runTest =
+--assertEqual { expected: nonDiagonalExpected, actual: nonDiagonalMovement.path }
+runTest :: Boolean -> { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
+runTest diagonal =
   let
     start = Tuple 0 0
 
-    goal = Tuple 4 4
+    goal = Tuple 3 3
 
     blocked = Set.empty # Set.insert Blocked
 
-    path = runAStar blocked start goal testWorld
+    path = runAStar blocked diagonal start goal testWorld
   in
     { matrix: showPath start goal path testWorld
     , path
@@ -68,11 +87,10 @@ runTest =
 
 testWorld :: Array (Array Cell)
 testWorld =
-  [ [ 0, 0, 0, 0, 0 ]
-  , [ 0, 0, 0, 1, 0 ]
-  , [ 0, 0, 0, 1, 0 ]
-  , [ 0, 1, 1, 1, 0 ]
-  , [ 0, 0, 0, 0, 0 ]
+  [ [ 0, 0, 1, 0 ]
+  , [ 0, 0, 0, 0 ]
+  , [ 1, 1, 1, 0 ]
+  , [ 0, 1, 0, 0 ]
   ]
     # map
         ( \n ->
