@@ -2,48 +2,58 @@ module Test.Main where
 
 import Prelude
 import Effect (Effect)
+import Test.Assert (assertEqual)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
-import Data.Graph.AStar (Cell(..), Point(..), runAStar)
+import Data.Graph.AStar (Point, Cell(..),runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Tuple
 import Matrix (Matrix)
 import Matrix as Matrix
 
 main :: Effect Unit
 main =
   let
-    res = printTest
+    result = runTest
+
+    expected =
+      [ Tuple 0 0
+      , Tuple 0 1
+      , Tuple 0 2
+      , Tuple 0 3
+      , Tuple 1 4
+      , Tuple 2 4
+      , Tuple 3 4
+      , Tuple 4 4
+      ]
   in
     do
-      log res.matrix
-      log res.path
+      log $ show result.matrix
+      log $ show result.path
+      assertEqual { expected, actual: result.path }
 
-printTest :: { matrix :: String, path :: String }
-printTest =
+runTest :: { matrix :: Matrix Cell, path :: Array Point }
+runTest =
   let
-    start = Point 1 1
+    start = Tuple 0 0
 
-    goal = Point 8 8
+    goal = Tuple 4 4
 
     path = runAStar start goal testWorld
   in
-    { matrix: show $ showPath start goal path testWorld
-    , path: show path
+    { matrix: showPath start goal path testWorld
+    , path: path
     }
 
 testWorld :: Matrix Cell
 testWorld =
   let
     arr =
-      [ [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1 ]
-      , [ 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1 ]
-      , [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
-      , [ 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1 ]
-      , [ 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1 ]
-      , [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
-      , [ 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 ]
-      , [ 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1 ]
-      , [ 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 ]
+      [ [ 0, 0, 0, 0, 0 ]
+      , [ 0, 0, 0, 1, 0 ]
+      , [ 0, 0, 0, 1, 0 ]
+      , [ 0, 1, 1, 1, 0 ]
+      , [ 0, 0, 0, 0, 0 ]
       ]
         # map
             ( \n ->
@@ -57,7 +67,6 @@ testWorld =
                   n
             )
 
-
     mat = fromMaybe Matrix.empty $ Matrix.fromArray arr
 
     setCell x y v matrix = case Matrix.set x y v matrix of
@@ -68,19 +77,19 @@ testWorld =
 
 showPath :: Point -> Point -> Array Point -> Matrix Cell -> Matrix Cell
 showPath start goal path world =
-    path
-      # foldl
-          ( \xs (Point x y) -> case Matrix.set x y Walk xs of
-              Just m -> m
-              _ -> xs
-          )
-          world
-      # Matrix.indexedMap
-          ( \x y val ->
-                if Point x y == start then
-                  Start
-                else if Point x y == goal then
-                  Goal
-                else 
-                  val
-          )
+  path
+    # foldl
+        ( \xs (Tuple x y) -> case Matrix.set x y Walk xs of
+            Just m -> m
+            _ -> xs
+        )
+        world
+    # Matrix.indexedMap
+        ( \x y val ->
+            if Tuple x y == start then
+              Start
+            else if Tuple x y == goal then
+              Goal
+            else
+              val
+        )

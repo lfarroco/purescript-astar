@@ -1,30 +1,19 @@
 module Data.Graph.AStar where
 
 import Prelude
-
 import Control.Apply (lift2)
 import Data.Array (filter, foldl, head, mapMaybe, sortWith)
 import Data.Int (toNumber)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Tuple (Tuple(..))
+import Data.Tuple
 import Math (abs, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
 
 -- can be extended to "Point x y weight"
-data Point
-  = Point Int Int
-
-instance showPoint :: Show Point where
-  show (Point x y) = "Point " <> show x <> " " <> show y
-
-derive instance eqPoint :: Eq Point
-
-derive instance ordPoint :: Ord Point
-
-derive instance eqCell :: Eq Cell
+type Point = Tuple Int Int
 
 data Cell
   = Walk
@@ -33,33 +22,37 @@ data Cell
   | Start
   | Goal
 
+derive instance eqCell :: Eq Cell
+
 instance showCell :: Show Cell where
   show Walk = "x "
   show Empty = "  "
   show Start = "✯ "
-  show Blocked = "█ "
+  show Blocked = "w "
   show Goal = "✯ "
 
 type Grid
   = Map Point Cell
 
 getNeighbors :: Point -> Matrix Cell -> Array Point
-getNeighbors (Point x y) matrix =
+getNeighbors (Tuple x y) matrix =
   let
-    getCell (Point dx dy) = case Matrix.get (dx + x) (dy + y) matrix of
+    getCell (Tuple tx ty) = case Matrix.get (tx + x) (ty + y) matrix of
       Just cell ->
         if cell == Blocked then
           Nothing
-        else 
-          Just $ Point (dx + x) (dy + y)
+        else
+          Just $ Tuple (tx + x) (ty + y)
       Nothing -> Nothing
 
     ns = [ -1, 0, 1 ]
 
-    directions = lift2 Point ns ns # filter (\p -> p /= Point 0 0)
+    directions = lift2 Tuple ns ns # filter (\p -> p /= Tuple 0 0)
   in
     mapMaybe getCell directions
 
+-- Making it more general: can receive an array of walkable tiles, and another of non walkable,
+-- with the same type as the matrix
 findPath ::
   Map Point Number ->
   Map Point Number ->
@@ -68,14 +61,14 @@ findPath ::
   Matrix Cell -> Array Point
 findPath openSet costMap cameFrom target world =
   let
-    mhead =
+    maybeHead =
       openSet
         # Map.toUnfoldable
-        # sortWith (\(Tuple k v) -> v)
+        # sortWith snd
         # head
-        # map (\(Tuple point priority) -> point)
+        # map fst
   in
-    case mhead of
+    case maybeHead of
       Nothing -> []
       Just current ->
         let
@@ -127,15 +120,11 @@ traceParent point index = case Map.lookup point index of
   Nothing -> []
 
 distance :: Point -> Point -> Number
-distance (Point x y) (Point p1 p2) =
+distance p1 p2  =
   let
-    t = toNumber
-
-    x' = abs (t p1) - (t x)
-
-    y' = abs (t p2) - (t y)
+    mag (Tuple x y ) = x + y
   in
-    x' + y'
+    p2 - p1  # mag # toNumber # abs
 
 runAStar :: Point -> Point -> Matrix Cell -> Array Point
 runAStar start goal grid =
