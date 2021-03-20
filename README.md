@@ -1,5 +1,7 @@
 # purescript-astar
 
+[![CI](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml/badge.svg)](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml)
+
 An A\* implementation on PureScript for 2d boards.
 
 ```
