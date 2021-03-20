@@ -125,7 +125,7 @@ distance p1 p2 =
   in
     p2 - p1 # mag # toNumber # abs
 
-runAStar :: forall a. Ord a => Set a -> Point -> Point -> Matrix a -> Array Point
+runAStar :: forall a. Ord a => Set a -> Point -> Point -> Array (Array a) -> Array Point
 runAStar blocked start target grid =
   let
     openSet = Map.empty # Map.insert start 0.0
@@ -135,5 +135,7 @@ runAStar blocked start target grid =
     cameFrom = Map.empty
 
     closedSet = Set.empty
+
+    world = Matrix.fromArray grid # fromMaybe Matrix.empty
   in
-    step blocked { openSet, closedSet, knownCosts, cameFrom, target } grid
+    step blocked { openSet, closedSet, knownCosts, cameFrom, target } world

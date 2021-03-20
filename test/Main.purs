@@ -1,12 +1,12 @@
 module Test.Main where
 
-import Prelude
+import Prelude (class Eq, class Ord, class Show, Unit, discard, map, show, (#), ($), (==))
 import Effect (Effect)
 import Test.Assert (assertEqual)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
 import Data.Set as Set
-import Data.Graph.AStar (Point, runAStar)
+import Data.Graph.AStar (runAStar)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple
 import Matrix (Matrix)
@@ -20,6 +20,7 @@ data Cell
   | Goal
 
 derive instance eqCell :: Eq Cell
+
 derive instance ordCell :: Ord Cell
 
 instance showCell :: Show Cell where
@@ -50,7 +51,7 @@ main =
       log $ show result.path
       assertEqual { expected, actual: result.path }
 
-runTest :: { matrix :: Matrix Cell, path :: Array Point }
+runTest :: { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
 runTest =
   let
     start = Tuple 0 0
@@ -62,40 +63,35 @@ runTest =
     path = runAStar blocked start goal testWorld
   in
     { matrix: showPath start goal path testWorld
-    , path: path
+    , path
     }
 
-testWorld :: Matrix Cell
+testWorld :: Array (Array Cell)
 testWorld =
-  let
-    arr =
-      [ [ 0, 0, 0, 0, 0 ]
-      , [ 0, 0, 0, 1, 0 ]
-      , [ 0, 0, 0, 1, 0 ]
-      , [ 0, 1, 1, 1, 0 ]
-      , [ 0, 0, 0, 0, 0 ]
-      ]
-        # map
-            ( \n ->
-                map
-                  ( \c ->
-                      if c == 0 then
-                        Empty
-                      else
-                        Blocked
-                  )
-                  n
-            )
+  [ [ 0, 0, 0, 0, 0 ]
+  , [ 0, 0, 0, 1, 0 ]
+  , [ 0, 0, 0, 1, 0 ]
+  , [ 0, 1, 1, 1, 0 ]
+  , [ 0, 0, 0, 0, 0 ]
+  ]
+    # map
+        ( \n ->
+            map
+              ( \c ->
+                  if c == 0 then
+                    Empty
+                  else
+                    Blocked
+              )
+              n
+        )
 
-    mat = fromMaybe Matrix.empty $ Matrix.fromArray arr
-
-    setCell x y v matrix = case Matrix.set x y v matrix of
-      Just m -> m
-      _ -> matrix
-  in
-    mat
-
-showPath :: Point -> Point -> Array Point -> Matrix Cell -> Matrix Cell
+showPath ::
+  Tuple Int Int ->
+  Tuple Int Int ->
+  Array (Tuple Int Int) ->
+  Array (Array Cell) ->
+  Matrix Cell
 showPath start goal path world =
   path
     # foldl
@@ -103,7 +99,7 @@ showPath start goal path world =
             Just m -> m
             _ -> xs
         )
-        world
+        (Matrix.fromArray world # fromMaybe Matrix.empty)
     # Matrix.indexedMap
         ( \x y val ->
             if Tuple x y == start then
