@@ -35,22 +35,22 @@ w , w , w , x
 ```
 
 For `blocked` you can provide a `Set` with a custom type - its element will be
-considered unwalkable. Eg. you can have
+considered unwalkable. You can have
 
 ```
 data Cell = Wall | Grass
 ```
 
-and then pass as `blocked`:
+and then `Wall` as `blocked`:
 
 ```
-Set.insert 1 Set.empty
+Set.insert Wall Set.empty
 ```
 
 Note that walkable cells in the `world` parameter should also match the type, so
-they will need to be either `Wall` or `Grass`.
+in this example they will need to be either `Wall` or `Grass`.
 
-Based on the work of
+Based on the work of:
 
 - https://www.redblobgames.com/pathfinding/a-star/introduction.html
 - https://github.com/weissi/astar
