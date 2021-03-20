@@ -1,6 +1,6 @@
 module Data.Pathfinding.AStar
-  ( runAStarDiagonal
-  , runAStarNonDiagonal
+  ( runAStarNonDiagonal
+  , runAStarDiagonal
   , AStar
   , Vector2d
   , vector2d
@@ -20,35 +20,30 @@ import Math (sqrt, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
 
--- An alias for a 2d coordinate
+-- | An alias for a 2d coordinate
 type Vector2d
   = { x :: Int, y :: Int }
 
--- Creates a Vector2d 
+-- | Creates a Vector2d 
 vector2d :: Int -> Int -> Vector2d
 vector2d x y = { x, y }
 
--- If diagonal cells shouldn't be used during search
+-- | If diagonal cells shouldn't be used during search
 runAStarNonDiagonal :: AStar
 runAStarNonDiagonal = runAStar false
 
--- If diagonal cells should be used during search
+-- | If diagonal cells should be used during search
 runAStarDiagonal :: AStar
 runAStarDiagonal = runAStar true
 
--- Parameters to run the pathfinder:
--- Array of blocked cell types (eg. [1] or a custom Ord type [Wall])
--- Source cell Vector2d (eg. {x: 0, y: 0})
--- Goal cell Vector2d (eg. {x: 1, y:2})
--- Two-dimensional Array of cells (eg. [[0,0,0], [0,1,0]])
+-- | Parameters to run the pathfinder:
+-- | Array of blocked cell types (eg. [1] or a custom Ord type [Wall])
+-- | Source cell Vector2d (eg. {x: 0, y: 0})
+-- | Goal cell Vector2d (eg. {x: 1, y:2})
+-- | Two-dimensional Array of cells (eg. [[0,0,0], [0,1,0]])
+-- | The result will be an Array of Vector2d including the source and target cells.
 type AStar
-  = forall a.
-    Ord a =>
-    Array a -> -- Array of blocked cell types
-    Vector2d -> -- Source cell
-    Vector2d -> -- Goal cell
-    Array (Array a) -> -- 2d Array of cells
-    Array Vector2d -- Resulting path with source and target cells
+  = forall a. Ord a => Array a -> Vector2d -> Vector2d -> Array (Array a) -> Array Vector2d
 
 runAStar :: Boolean -> AStar
 runAStar useDiagonal blockedCells start target grid =
@@ -102,7 +97,7 @@ getNeighbors blockedCells directions sourceVector closedSet matrix =
     mapMaybe getCell directions
 
 -- The "frontier" of the search algorithm. Contains path candidates. On each 
--- step, the one with lower cost is chosen to expand the search area.
+-- step, the one with the lower cost is chosen to expand the search area.
 type OpenSet
   = Map Vector2d Number
 
@@ -111,11 +106,11 @@ type ClosedSet
   = Set Vector2d
 
 -- Cost for each visited cell. Cells in the OpenSet might change value if we
--- discover another shortest path to it.
+-- discover another shortest path to them.
 type KnownCosts
   = Map Vector2d Number
 
--- Registers what is the "parent" each cell, allowing us to backtrack the
+-- Registers what is the "parent" of each cell, allowing us to backtrack the
 -- source when the goal is found.
 type CameFrom
   = Map Vector2d Vector2d
@@ -166,12 +161,11 @@ step blockedCells directions { openSet, closedSet, knownCosts, cameFrom, target 
                   totalCost = moveToNextCost + heuristic
                 in
                   if nextIsNew || pathToNextIsBetter then
-                    { openSet: Map.insert next totalCost acc.openSet
-                    , closedSet: closedSetWithoutCurrent
-                    , knownCosts: Map.insert next moveToNextCost acc.knownCosts
-                    , cameFrom: Map.insert next current acc.cameFrom
-                    , target
-                    }
+                    acc
+                      { openSet = Map.insert next totalCost acc.openSet
+                      , knownCosts = Map.insert next moveToNextCost acc.knownCosts
+                      , cameFrom = Map.insert next current acc.cameFrom
+                      }
                   else
                     acc
             )
