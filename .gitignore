@@ -9,3 +9,4 @@ node_modules
 .purs-repl
 output
 .psc-ide-port
+generated-docs/
