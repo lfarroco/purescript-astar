@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml/badge.svg)](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml)
 
-An A* search algorithm implementation on PureScript for 2d planes.
+An [A\* search](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm implementation on PureScript for 2d planes.
 
 ```
 purescript
@@ -20,33 +20,45 @@ let
         ]
 
     -- tiles with `1` are non-walkable
-    blocked = Set.insert 1 Set.empty 
-
-    useDiagonals = false
+    blocked = [1]
 in
-    runAStar blocked useDiagonals start goal world
+    runAStarNonDiagonal blocked useDiagonals start goal world
 
 -- the result will be an array of tuples containg the path coordinates
 -- including the source and destination cells
-
-[{ x: 0, y: 0 },{ x: 0, y: 1 },{ x: 0, y: 2 },{ x: 0, y: 3 },{ x: 0, y: 4 },{ x: 1, y: 4 },{ x: 2, y: 4 },{ x: 3, y: 4 },{ x: 4, y: 4 }]
+[ { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }
+, { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 }
+]
 
 -- which corresponds to the following path
-✯ ,   ,   ,   ,   
-= ,   ,   , # ,   
-= ,   ,   , # ,   
-= , # , # , # ,   
+✯ ,   ,   ,   ,
+= ,   ,   , # ,
+= ,   ,   , # ,
+= , # , # , # ,
 = , = , = , = , ⚑
 ```
 
-You can use your own types for the `blocked` set, as long as they match the types used for your `world` 2d array. 
+You can use your own types for the `blocked` parameter, as long as implement
+the Ord class and match the ones used for your `world` 2d array.
 You can have
 
 ```
 data Cell = Wall | Grass
 ```
 
-and then place `Wall` in the `blocked` set parameter. 
+and a grid with
+
+```
+[
+  [Grass, Wall, Grass],
+  [Grass, Wall, Grass],
+  [Grass, Grass, Grass],
+]
+```
+
+and then use place `[Wall]` as the `blocked` parameter.
+
+Check the test module to see more usage examples.
 
 Based on the work of:
 

@@ -1,4 +1,10 @@
-module Data.Graph.AStar (runAStar, Vector2d, vector2d) where
+module Data.Pathfinding.AStar
+  ( runAStarDiagonal
+  , runAStarNonDiagonal
+  , AStar
+  , Vector2d
+  , vector2d
+  ) where
 
 import Prelude
 import Control.Apply (lift2)
@@ -14,7 +20,7 @@ import Math (sqrt, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
 
--- An alias for a representation of a 2d coordinate
+-- An alias for a 2d coordinate
 type Vector2d
   = { x :: Int, y :: Int }
 
@@ -22,10 +28,34 @@ type Vector2d
 vector2d :: Int -> Int -> Vector2d
 vector2d x y = { x, y }
 
-runAStar :: forall a. Ord a => Set a -> Boolean -> Vector2d -> Vector2d -> Array (Array a) -> Array Vector2d
-runAStar blockedCells useDiagonal start target grid =
+-- If diagonal cells shouldn't be used during search
+runAStarNonDiagonal :: AStar
+runAStarNonDiagonal = runAStar false
+
+-- If diagonal cells should be used during search
+runAStarDiagonal :: AStar
+runAStarDiagonal = runAStar true
+
+-- Parameters to run the pathfinder:
+-- Array of blocked cell types (eg. [1] or a custom Ord type [Wall])
+-- Source cell Vector2d (eg. {x: 0, y: 0})
+-- Goal cell Vector2d (eg. {x: 1, y:2})
+-- Two-dimensional Array of cells (eg. [[0,0,0], [0,1,0]])
+type AStar
+  = forall a.
+    Ord a =>
+    Array a -> -- Array of blocked cell types
+    Vector2d -> -- Source cell
+    Vector2d -> -- Goal cell
+    Array (Array a) -> -- 2d Array of cells
+    Array Vector2d -- Resulting path with source and target cells
+
+runAStar :: Boolean -> AStar
+runAStar useDiagonal blockedCells start target grid =
   let
     openSet = Map.empty # Map.insert start 0.0
+
+    blockedSet = Set.fromFoldable blockedCells
 
     knownCosts = Map.empty # Map.insert start 0.0
 
@@ -37,17 +67,16 @@ runAStar blockedCells useDiagonal start target grid =
 
     directions =
       lift2 vector2d ns ns
-        # filter \p ->
-            p /= vector2d 0 0
-              && ( if useDiagonal then
-                    true
-                  else
-                    not (isDiagonal p)
-                )
+        # filter (\vec -> vec /= vector2d 0 0)
+        # filter \vec ->
+            if useDiagonal then
+              true
+            else
+              not (isDiagonal vec)
 
     world = Matrix.fromArray grid # fromMaybe Matrix.empty
   in
-    step blockedCells directions { openSet, closedSet, knownCosts, cameFrom, target } world
+    step blockedSet directions { openSet, closedSet, knownCosts, cameFrom, target } world
 
 isDiagonal :: Vector2d -> Boolean
 isDiagonal { x, y } = pow x 2 + pow y 2 # toNumber # sqrt # (==) sqrt2
@@ -69,7 +98,6 @@ getNeighbors blockedCells directions sourceVector closedSet matrix =
             | Set.member neighbor closedSet -> Nothing
             | otherwise -> Just neighbor
           Nothing -> Nothing
-  -- todo move to parent fn
   in
     mapMaybe getCell directions
 

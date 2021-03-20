@@ -1,6 +1,6 @@
 module Test.Main where
 
-import Data.Graph.AStar (runAStar, Vector2d, vector2d)
+import Data.Pathfinding.AStar (runAStarDiagonal, runAStarNonDiagonal, Vector2d, vector2d)
 import Prelude (class Eq, class Ord, class Show, Unit, discard, map, show, (#), ($), (==))
 import Effect (Effect)
 import Test.Assert (assertEqual)
@@ -65,6 +65,7 @@ main =
       log $ show diagonalMovement.matrix
       log $ show diagonalMovement.path
       assertEqual { expected: diagonalExpected, actual: diagonalMovement.path }
+
       log $ "-----Non-Diagonal Movement-----"
       log $ show nonDiagonalMovement.matrix
       log $ show nonDiagonalMovement.path
@@ -77,9 +78,9 @@ runTest useDiagonal =
 
     goal = {x: 4 , y: 4}
 
-    blocked = Set.empty # Set.insert Blocked
+    pathfinder = if useDiagonal then runAStarDiagonal else runAStarNonDiagonal
 
-    path = runAStar blocked useDiagonal start goal testWorld
+    path = pathfinder [Blocked] start goal testWorld
   in
     { matrix: showPath start goal path testWorld
     , path
