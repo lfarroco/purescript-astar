@@ -1,4 +1,4 @@
-module Data.Graph.AStar (runAStar) where
+module Data.Graph.AStar (runAStar, Point) where
 
 import Prelude
 import Control.Apply (lift2)
@@ -19,7 +19,7 @@ type Point
   = Tuple Int Int
 
 runAStar :: forall a. Ord a => Set a -> Boolean -> Point -> Point -> Array (Array a) -> Array Point
-runAStar blocked diagonal start target grid =
+runAStar blockedCells useDiagonal start target grid =
   let
     openSet = Map.empty # Map.insert start 0.0
 
@@ -31,13 +31,13 @@ runAStar blocked diagonal start target grid =
 
     world = Matrix.fromArray grid # fromMaybe Matrix.empty
   in
-    step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world
+    step blockedCells useDiagonal { openSet, closedSet, knownCosts, cameFrom, target } world
 
 sumTuple :: Tuple Int Int -> Number
 sumTuple (Tuple x y) = x + y # toNumber # abs
 
 getNeighbors :: forall a. Ord a => Set a -> Boolean -> Point -> Set Point -> Matrix a -> Array Point
-getNeighbors blocked diagonal (Tuple x y) closedSet matrix =
+getNeighbors blockedCells useDiagonal (Tuple x y) closedSet matrix =
   let
     getCell (Tuple x' y') =
       let
@@ -49,14 +49,14 @@ getNeighbors blocked diagonal (Tuple x y) closedSet matrix =
       in
         case Matrix.get x'' y'' matrix of
           Just cell
-            | Set.member cell blocked -> Nothing
+            | Set.member cell blockedCells -> Nothing
             | Set.member neighbor closedSet -> Nothing
             | otherwise -> Just neighbor
           Nothing -> Nothing
 
     ns = [ -1, 0, 1 ]
 
-    directions = lift2 Tuple ns ns # filter \p -> sumTuple p <= (if diagonal then 2.0 else 1.0)
+    directions = lift2 Tuple ns ns # filter \p -> sumTuple p <= (if useDiagonal then 2.0 else 1.0)
   in
     mapMaybe getCell directions
 
@@ -69,7 +69,7 @@ type State
     }
 
 step :: forall a. Ord a => Set a -> Boolean -> State -> Matrix a -> Array Point
-step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world =
+step blockedCells useDiagonal { openSet, closedSet, knownCosts, cameFrom, target } world =
   let
     maybeHead =
       openSet
@@ -87,14 +87,14 @@ step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world
           closed_ = closedSet # Set.insert current
 
           state =
-            getNeighbors blocked diagonal current closed_ world
+            getNeighbors blockedCells useDiagonal current closed_ world
               # foldl
                   ( \acc next ->
                       let
                         cost = Map.lookup current acc.knownCosts # fromMaybe 0.0
 
                         moveToNextCost
-                          | diagonal && distance current next == 2.0 = cost + sqrt2
+                          | useDiagonal && distance current next == 2.0 = cost + sqrt2
                           | otherwise = cost + 1.0
 
                         nextCost = Map.lookup next acc.knownCosts
@@ -122,7 +122,7 @@ step blocked diagonal { openSet, closedSet, knownCosts, cameFrom, target } world
           if current == target then
             traceParent target state.cameFrom <> [ target ]
           else
-            step blocked diagonal state world
+            step blockedCells useDiagonal state world
 
 traceParent :: Point -> Map Point Point -> Array Point
 traceParent point index = case Map.lookup point index of

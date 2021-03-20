@@ -71,7 +71,7 @@ main =
       assertEqual { expected: nonDiagonalExpected, actual: nonDiagonalMovement.path }
 
 runTest :: Boolean -> { matrix :: Matrix Cell, path :: Array (Tuple Int Int) }
-runTest diagonal =
+runTest useDiagonal =
   let
     start = Tuple 0 0
 
@@ -79,7 +79,7 @@ runTest diagonal =
 
     blocked = Set.empty # Set.insert Blocked
 
-    path = runAStar blocked diagonal start goal testWorld
+    path = runAStar blocked useDiagonal start goal testWorld
   in
     { matrix: showPath start goal path testWorld
     , path
