@@ -11,9 +11,12 @@ import Data.Tuple
 import Math (abs, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
+import Data.Set as Set
+import Data.Set (Set)
 
 -- can be extended to "Point x y weight"
-type Point = Tuple Int Int
+type Point
+  = Tuple Int Int
 
 data Cell
   = Walk
@@ -34,15 +37,15 @@ instance showCell :: Show Cell where
 type Grid
   = Map Point Cell
 
-getNeighbors :: Point -> Matrix Cell -> Array Point
-getNeighbors (Tuple x y) matrix =
+getNeighbors :: Point -> Set Point -> Matrix Cell -> Array Point
+getNeighbors (Tuple x y) closedSet matrix =
   let
-    getCell (Tuple tx ty) = case Matrix.get (tx + x) (ty + y) matrix of
+    getCell point = case Matrix.get (x + fst point) (y + snd point) matrix of
       Just cell ->
-        if cell == Blocked then
+        if cell == Blocked || ( Set.member ( Tuple (x + fst point) (y + snd point) ) closedSet) then
           Nothing
         else
-          Just $ Tuple (tx + x) (ty + y)
+          Just $ Tuple (x + fst point) (y + snd point)
       Nothing -> Nothing
 
     ns = [ -1, 0, 1 ]
@@ -51,15 +54,18 @@ getNeighbors (Tuple x y) matrix =
   in
     mapMaybe getCell directions
 
+type State
+  = { openSet :: Map Point Number
+    , closedSet :: Set Point
+    , knownCosts :: Map Point Number
+    , cameFrom :: Map Point Point
+    , target :: Point
+    }
+
 -- Making it more general: can receive an array of walkable tiles, and another of non walkable,
 -- with the same type as the matrix
-findPath ::
-  Map Point Number ->
-  Map Point Number ->
-  Map Point Point ->
-  Point ->
-  Matrix Cell -> Array Point
-findPath openSet costMap cameFrom target world =
+step :: State -> Matrix Cell -> Array Point
+step { openSet, closedSet, knownCosts, cameFrom, target } world =
   let
     maybeHead =
       openSet
@@ -72,14 +78,15 @@ findPath openSet costMap cameFrom target world =
       Nothing -> []
       Just current ->
         let
-          openSetWithoutCurrent = openSet # Map.update (\_ -> Nothing) current
+          openSet_ = openSet # Map.update (\_ -> Nothing) current
+          closed_  = closedSet # Set.insert current
 
           state =
-            getNeighbors current world
+            getNeighbors current closed_ world
               # foldl
                   ( \acc next ->
                       let
-                        cost = Map.lookup current acc.costMap # fromMaybe 0.0
+                        cost = Map.lookup current acc.knownCosts # fromMaybe 0.0
 
                         isDiagonal = distance current next == 2.0
 
@@ -89,7 +96,7 @@ findPath openSet costMap cameFrom target world =
                           else
                             cost + 1.0
 
-                        nextCost = Map.lookup next acc.costMap
+                        nextCost = Map.lookup next acc.knownCosts
 
                         nextIsNew = nextCost == Nothing
 
@@ -101,18 +108,20 @@ findPath openSet costMap cameFrom target world =
                       in
                         if nextIsNew || pathToNextIsBetter then
                           { openSet: Map.insert next totalCost acc.openSet
-                          , costMap: Map.insert next moveToNextCost acc.costMap
+                          , closedSet: closed_
+                          , knownCosts: Map.insert next moveToNextCost acc.knownCosts
                           , cameFrom: Map.insert next current acc.cameFrom
+                          , target
                           }
                         else
                           acc
                   )
-                  { openSet: openSetWithoutCurrent, costMap, cameFrom }
+                  { openSet: openSet_, knownCosts, cameFrom, closedSet: closed_, target }
         in
           if current == target then
             traceParent target state.cameFrom <> [ target ]
           else
-            findPath state.openSet state.costMap state.cameFrom target world
+            step state world
 
 traceParent :: Point -> Map Point Point -> Array Point
 traceParent point index = case Map.lookup point index of
@@ -120,19 +129,21 @@ traceParent point index = case Map.lookup point index of
   Nothing -> []
 
 distance :: Point -> Point -> Number
-distance p1 p2  =
+distance p1 p2 =
   let
-    mag (Tuple x y ) = x + y
+    mag (Tuple x y) = x + y
   in
-    p2 - p1  # mag # toNumber # abs
+    p2 - p1 # mag # toNumber # abs
 
 runAStar :: Point -> Point -> Matrix Cell -> Array Point
-runAStar start goal grid =
+runAStar start target grid =
   let
     openSet = Map.empty # Map.insert start 0.0
 
-    costMap = Map.empty # Map.insert start 0.0
+    knownCosts = Map.empty # Map.insert start 0.0
 
     cameFrom = Map.empty
+
+    closedSet = Set.empty
   in
-    findPath openSet costMap cameFrom goal grid
+    step { openSet, closedSet, knownCosts, cameFrom, target } grid
