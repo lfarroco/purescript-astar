@@ -20,7 +20,7 @@ let
     -- tiles with `1` are non-walkable
     blocked = [1]
 in
-    runAStarNonDiagonal blocked useDiagonals start goal world
+    runAStarNonDiagonal blocked start goal world
 
 -- the result will be an array of tuples containg the path coordinates
 -- including the source and destination cells
@@ -36,7 +36,7 @@ in
 = , = , = , = , ⚑
 ```
 
-You can use your own types for the `blocked` parameter, as long as implement
+You can use your own types for the `blocked` parameter, as long as they implement
 the Ord class and match the ones used for your `world` 2d array.
 You can have
 
@@ -53,7 +53,7 @@ and a grid with
 ]
 ```
 
-and then use place `[Wall]` as the `blocked` parameter.
+and then use `[Wall]` as the `blocked` parameter.
 
 Check the test module to see more usage examples.
 
