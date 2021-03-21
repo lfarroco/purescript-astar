@@ -47,10 +47,9 @@ data Cell = Wall | Grass
 and a grid with
 
 ```
-[
-  [Grass, Wall, Grass],
-  [Grass, Wall, Grass],
-  [Grass, Grass, Grass],
+[ [Grass, Wall, Grass]
+, [Grass, Wall, Grass]
+, [Grass, Grass, Grass]
 ]
 ```
 
