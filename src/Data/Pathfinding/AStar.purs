@@ -36,11 +36,16 @@ runAStarNonDiagonal = runAStar false
 runAStarDiagonal :: AStar
 runAStarDiagonal = runAStar true
 
--- | Parameters to run the pathfinder:
--- | Array of blocked cell types (eg. [1] or a custom Ord type [Wall])
--- | Source cell Vector2d (eg. {x: 0, y: 0})
--- | Goal cell Vector2d (eg. {x: 1, y:2})
--- | Two-dimensional Array of cells (eg. [[0,0,0], [0,1,0]])
+-- | Parameters to run the pathfinder:  
+-- |
+-- | - Array of blocked cell types (eg. [1] or a custom Ord type [Wall])  
+-- |
+-- | - Source cell Vector2d (eg. {x: 0, y: 0})  
+-- |
+-- | - Goal cell Vector2d (eg. {x: 1, y:2})  
+-- |
+-- | - Two-dimensional Array of cells (eg. [[0,0,0], [0,1,0]])  
+-- |
 -- | The result will be an Array of Vector2d including the source and target cells.
 type AStar
   = forall a. Ord a => Array a -> Vector2d -> Vector2d -> Array (Array a) -> Array Vector2d
