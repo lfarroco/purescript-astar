@@ -2,11 +2,9 @@
 
 [![CI](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml/badge.svg)](https://github.com/lfarroco/purescript-astar/actions/workflows/blank.yml)
 
-An [A\* search](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm implementation on PureScript for 2d planes.
+An [A\* search](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm implementation on PureScript for 2D planes.
 
 ```
-purescript
-
 let
     start = {x: 0, y: 0}
 
