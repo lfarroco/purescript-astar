@@ -6,7 +6,6 @@ import Effect (Effect)
 import Test.Assert (assertEqual)
 import Effect.Class.Console (log)
 import Data.Array (foldl)
-import Data.Set as Set
 import Data.Maybe (Maybe(..), fromMaybe)
 import Matrix (Matrix)
 import Matrix as Matrix
