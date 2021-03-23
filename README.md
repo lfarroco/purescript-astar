@@ -8,21 +8,22 @@ An [A\* search](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm imp
 let
     start = {x: 0, y: 0}
 
-    goal = {x: 3, y: 3}
+    goal = {x: 4, y: 4}
 
     world =
-        [ [ 0, 0, 1, 0 ]
-        , [ 0, 0, 0, 0 ]
-        , [ 1, 1, 1, 0 ]
-        , [ 0, 1, 0, 0 ]
+        [ [ 0, 0, 0, 0, 0 ]
+        , [ 0, 0, 0, 1, 0 ]
+        , [ 0, 0, 0, 1, 0 ]
+        , [ 0, 1, 1, 1, 0 ]
+        , [ 0, 0, 0, 0, 0 ]
         ]
 
     -- tiles with `1` are non-walkable
-    blocked = [1]
+    blocked = [ 1 ]
 in
     runAStarNonDiagonal blocked start goal world
 
--- the result will be an array of tuples containg the path coordinates
+-- the result will be an array of vectors containing the path coordinates
 -- including the source and destination cells
 [ { x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }
 , { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 }
@@ -37,7 +38,7 @@ in
 ```
 
 You can use your own types for the `blocked` parameter, as long as they implement
-the Ord class and match the ones used for your `world` 2d array.
+the Ord class and match the ones used for your `world` 2D array.
 You can have
 
 ```
@@ -53,7 +54,7 @@ and a grid with
 ]
 ```
 
-and then use `[Wall]` as the `blocked` parameter.
+and then use `[ Wall ]` as the `blocked` parameter.
 
 Check the test module to see more usage examples.
 
