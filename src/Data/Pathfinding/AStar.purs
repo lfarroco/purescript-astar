@@ -16,7 +16,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set (Set)
 import Data.Set as Set
 import Data.Tuple (fst, snd)
-import Math (sqrt, sqrt2)
+import Data.Number (sqrt, sqrt2)
 import Matrix (Matrix)
 import Matrix as Matrix
 
